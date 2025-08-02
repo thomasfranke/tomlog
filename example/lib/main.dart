@@ -1,8 +1,16 @@
+import 'dart:developer';
+
+import 'package:example/class.dart';
 import 'package:flutter/material.dart';
 import 'package:tomlog/tomlog.dart';
 
 void main() {
-  TomLog.log("App iniciado", level: LogLevel.info);
+  log('1');
+  TomLog.init(printOnlyCritical: false);
+  log('2');
+  TomLog().w("Aplicativo iniciado");
+  log('3');
+  TomLog().w("Aplicativo iniciado2");
   runApp(const MyApp());
 }
 
@@ -11,6 +19,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    SampleClass().sampleMethod();
     return MaterialApp(
       title: 'TomLog Example',
       home: Scaffold(

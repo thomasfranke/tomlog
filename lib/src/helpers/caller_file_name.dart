@@ -1,4 +1,4 @@
-String getCallerInfo() {
+String getCallerFilename() {
   final lines = StackTrace.current.toString().split('\n');
   if (lines.length > 3) {
     final line = lines[3];
