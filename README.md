@@ -1,39 +1,97 @@
-<!--
-This README describes the package. If you publish this package to pub.dev,
-this README's contents appear on the landing page for your package.
+# TomLog
 
-For information about how to write a good package README, see the guide for
-[writing package pages](https://dart.dev/tools/pub/writing-package-pages).
-
-For general information about developing packages, see the Dart guide for
-[creating packages](https://dart.dev/guides/libraries/create-packages)
-and the Flutter guide for
-[developing packages and plugins](https://flutter.dev/to/develop-packages).
--->
-
-TODO: Put a short description of the package here that helps potential users
-know whether this package might be useful for them.
+A customizable logger for Flutter/Dart with support for log levels, formatted timestamps, categories, limited history, and colorful console output.
 
 ## Features
 
-TODO: List what your package can do. Maybe include images, gifs, or videos.
+- Simple singleton for global usage.
+- Flexible display settings: timestamps, log levels, filenames, class names.
+- Limited history (default 100 entries).
+- Supports log levels: debug, info, warning, error.
+- Color-coded logs in console (ANSI colors).
+- Easy to use with dedicated methods for each level.
+- Export logs to JSON.
+- Print full formatted log history.
 
-## Getting started
+## Getting Started
 
-TODO: List prerequisites and provide or point to information on how to
-start using the package.
+Add the dependency in your `pubspec.yaml`:
 
-## Usage
+##Usage
 
-TODO: Include short and useful examples for package users. Add longer examples
-to `/example` folder.
+###Initialization
 
-```dart
-const like = 'sample';
+```
+import 'package:tomlog/tomlog.dart';
+
+void main() {
+  TomLog.init(
+    printOnlyCritical: false,
+    printTimeStamp: true,
+    printLogLevel: true,
+    printFilename: false,
+    printClassName: true,
+    timeStampFormat: 'yyyy-MM-dd HH:mm:ss',
+    printType: TomLogPrintType.color, // or TomLogPrintType.slim
+  );
+}
 ```
 
-## Additional information
+### Logging messages
 
-TODO: Tell users more about the package: where to find more information, how to
-contribute to the package, how to file issues, what response they can expect
-from the package authors, and more.
+```
+TomLog().d('Debug message');
+TomLog().i('Important info');
+TomLog().w('Warning!');
+TomLog().e('Critical error');
+```
+
+### Printing the log history
+
+```
+TomLog().printHistory();
+```
+
+### Optional: Customize log level and category
+
+This allows you to group and style logs by categories for easier filtering and reading.
+
+You can define custom log categories like this:
+
+```
+class TomLogCategories {
+  ///
+  static const TomLogCategory db = TomLogCategory(
+    'DB',
+    color: TomLogColor.blue,
+    printOnConsole: true,
+  );
+
+  ///
+  static const TomLogCategory api = TomLogCategory(
+    'API',
+    color: TomLogColor.cyan,
+    printOnConsole: false,
+  );
+}
+```
+
+Then use it when logging:
+
+```
+TomLog().w('Network warning message', category: TomLogCategories.network);
+```
+
+## API
+• `TomLog.d(String message, {TomLogCategory? category})` — debug log
+• `TomLog.i(String message, {TomLogCategory? category})` — info log
+• `TomLog.w(String message, {TomLogCategory? category})` — warning log
+• `TomLog.e(String message, {TomLogCategory? category})` — error log
+• `TomLog.printHistory()` — prints the full formatted log history
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you’d like to change.
+
+## License
+MIT License © Thomas Franke

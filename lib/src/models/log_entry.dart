@@ -1,4 +1,4 @@
-import 'package:tomlog/tomlog.dart';
+import 'package:intl/intl.dart';
 
 ///
 class TomLogEntry {
@@ -7,9 +7,8 @@ class TomLogEntry {
     this.category,
     required this.message,
     required this.dateTime,
-    required this.type,
+    required this.level,
     required this.stackTrace,
-    required this.logLevel,
   });
 
   ///
@@ -22,24 +21,25 @@ class TomLogEntry {
   final DateTime dateTime;
 
   ///
-  final TomLogLevel logLevel;
-
-  ///
-  final String type;
+  final String level;
 
   ///
   final String? stackTrace;
 
-  /// toString:
+  ///
   @override
-  String toString() => '[$category] $message - $dateTime - $type\n';
+  String toString() {
+    final cat = category != null ? '[$category]' : '';
+    final formattedDate = DateFormat('yyyy-MM-dd HH:mm:ss').format(dateTime);
+    return '[$level]$cat[$formattedDate] $message';
+  }
 
-  /// toJson:
+  ///
   Map<String, dynamic> toJson() => <String, dynamic>{
     'category': category,
     'message': message,
     'dateTime': dateTime.toIso8601String(),
-    'type': type,
+    'level': level,
     'stackTrace': stackTrace,
   };
 }

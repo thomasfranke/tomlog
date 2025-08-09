@@ -1,40 +1,62 @@
+import 'dart:developer';
+
 import 'package:tomlog/src/core/log_builder.dart';
-import 'package:tomlog/src/models.dart/log_category.dart';
-import 'package:tomlog/src/models.dart/log_entry.dart';
+import 'package:tomlog/src/models/log_display_type.dart';
 import 'package:tomlog/tomlog.dart';
 
-///Customizable logger singleton, with support for init and filters.
+/// Customizable logger singleton, with support for init and filters.
 class TomLog {
   /// Singleton instance
   static final TomLog _instance = TomLog._internal();
   factory TomLog() => _instance;
   TomLog._internal();
 
-  static bool _initialized = false;
+  static final bool _initialized = false;
 
-  /// Preferência configurável
-  late bool _printOnlyCritical;
+  late bool printOnlyCritical;
 
-  /// History buffer.
+  late bool printTimeStamp;
+
+  late bool printLogLevel;
+
+  late bool printFilename;
+
+  late bool printClassName;
+
+  late String timeStampFormat;
+
+  late TomLogPrintType printType;
+
   final List<TomLogEntry> history = <TomLogEntry>[];
 
-  /// Inicialização única
-  static void init({bool printOnlyCritical = false}) {
+  static void init({
+    bool printOnlyCritical = false,
+    bool printTimeStamp = true,
+    bool printLogLevel = false,
+    bool printFilename = false,
+    bool printClassName = true,
+    TomLogPrintType printType = TomLogPrintType.slim,
+    String timeStampFormat = 'yyyy-MM-dd HH:mm:ss',
+  }) {
     if (_initialized) {
       throw StateError('TomLog has already been initialized.');
     }
 
-    _instance._printOnlyCritical = printOnlyCritical;
-
-    _initialized = true;
+    _instance.printOnlyCritical = printOnlyCritical;
+    _instance.printTimeStamp = printTimeStamp;
+    _instance.printFilename = printFilename;
+    _instance.printFilename = printFilename;
+    _instance.printLogLevel = printLogLevel;
+    _instance.printClassName = printClassName;
+    _instance.timeStampFormat = timeStampFormat;
+    _instance.printType = printType;
   }
 
   /// Logs a debug message.
   void d(final String message, {final TomLogCategory? category}) {
     TomLogBuilder().logBuilder(
-      this,
+      _instance,
       message,
-      printOnlyCritical: _printOnlyCritical,
       category: category,
       logLevel: TomLogLevel.debug,
     );
@@ -45,7 +67,6 @@ class TomLog {
     TomLogBuilder().logBuilder(
       this,
       message,
-      printOnlyCritical: _printOnlyCritical,
       category: category,
       logLevel: TomLogLevel.info,
     );
@@ -56,7 +77,6 @@ class TomLog {
     TomLogBuilder().logBuilder(
       this,
       message,
-      printOnlyCritical: _printOnlyCritical,
       category: category,
       logLevel: TomLogLevel.warning,
     );
@@ -67,9 +87,32 @@ class TomLog {
     TomLogBuilder().logBuilder(
       this,
       message,
-      printOnlyCritical: _printOnlyCritical,
       category: category,
       logLevel: TomLogLevel.error,
     );
+  }
+
+  void printHistory({
+    TomLogCategory? filterCategory,
+    TomLogLevel? filterLevel,
+  }) {
+    final buffer = StringBuffer('**TomLog History**\n');
+
+    final filteredEntries = history.where((entry) {
+      final matchesCategory =
+          filterCategory == null || entry.category == filterCategory.name;
+      final matchesLevel =
+          filterLevel == null ||
+          entry.level.toUpperCase() == filterLevel.name.toUpperCase();
+      return matchesCategory && matchesLevel;
+    });
+
+    for (final entry in filteredEntries) {
+      buffer.writeln(entry.toString());
+    }
+
+    final output = buffer.toString().trim();
+
+    log(output);
   }
 }

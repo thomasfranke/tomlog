@@ -1,4 +1,4 @@
-import '../models.dart/log_level.dart';
+import '../models/log_level.dart';
 
 class TomLogConfig {
   static TomLogLevel minLogLevel = TomLogLevel.debug;

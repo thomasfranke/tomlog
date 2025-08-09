@@ -1,4 +1,4 @@
-import 'package:tomlog/src/models.dart/log_color.dart';
+import 'package:tomlog/src/models/log_color.dart';
 
 ///
 class TomLogCategory {
