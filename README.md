@@ -1,16 +1,16 @@
 # TomLog
 
-A customizable logger for Flutter/Dart with support for log levels, formatted timestamps, categories, limited history, and colorful console output.
+A simple yet powerful logging system that makes it easy to categorize logs, automatically captures file and class information, maintains a log history, and integrates seamlessly with monitoring systems.
 
 ## Features
 
 - Simple singleton for global usage.
 - Flexible display settings: timestamps, log levels, filenames, class names.
-- Limited history (default 100 entries).
+- Limited history (default 20 entries).
 - Supports log levels: debug, info, warning, error.
 - Color-coded logs in console (ANSI colors).
-- Easy to use with dedicated methods for each level.
-- Export logs to JSON.
+- Dedicated methods for each log level.
+- Export logs to JSON and String.
 - Print full formatted log history.
 
 ## Getting Started
@@ -21,7 +21,7 @@ Add the dependency in your `pubspec.yaml`:
 
 ###Initialization
 
-```
+```dart
 import 'package:tomlog/tomlog.dart';
 
 void main() {
@@ -32,7 +32,7 @@ void main() {
     printFilename: false,
     printClassName: true,
     timeStampFormat: 'yyyy-MM-dd HH:mm:ss',
-    printType: TomLogPrintType.color, // or TomLogPrintType.slim
+    printType: TomLogPrintType.slim,
   );
 }
 ```
@@ -48,7 +48,7 @@ TomLog().e('Critical error');
 
 ### Printing the log history
 
-```
+```dart
 TomLog().printHistory();
 ```
 
@@ -58,7 +58,7 @@ This allows you to group and style logs by categories for easier filtering and r
 
 You can define custom log categories like this:
 
-```
+```dart
 class TomLogCategories {
   ///
   static const TomLogCategory db = TomLogCategory(
@@ -82,12 +82,36 @@ Then use it when logging:
 TomLog().w('Network warning message', category: TomLogCategories.network);
 ```
 
+## Adding Handlers (e.g., Sentry)
+
+You can add one or more log handlers on initialization to integrate with Sentry or any other monitoring system.
+
+```dart
+TomLog.init(
+  logHandlers: [
+    (entry) async {
+      await Sentry.captureException(
+        Exception(entry.message),
+        stackTrace: StackTrace.fromString(entry.stackTrace ?? ''),
+        hint: 'Category: ${entry.category ?? 'None'}',
+        withScope: (scope) {
+          scope.setTag('category', entry.category ?? 'none');
+          scope.setExtra('logLevel', entry.level);
+          scope.setExtra('history', TomLog().getHistoryString());
+        },
+      );
+    },
+  ],
+);
+```
+
 ## API
-• `TomLog.d(String message, {TomLogCategory? category})` — debug log
-• `TomLog.i(String message, {TomLogCategory? category})` — info log
-• `TomLog.w(String message, {TomLogCategory? category})` — warning log
-• `TomLog.e(String message, {TomLogCategory? category})` — error log
-• `TomLog.printHistory()` — prints the full formatted log history
+• `TomLog.d(String message, {TomLogCategory? category})`: debug log
+• `TomLog.i(String message, {TomLogCategory? category})`: info log
+• `TomLog.w(String message, {TomLogCategory? category})`: warning log
+• `TomLog.e(String message, {TomLogCategory? category})`: error log
+• `TomLog.getHistoryString()`: returns the full formatted log history as a string
+• `TomLog.printHistory()`: prints the full formatted log history
 
 ## Contributing
 

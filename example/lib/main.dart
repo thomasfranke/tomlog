@@ -1,19 +1,18 @@
-import 'dart:developer';
-
 import 'package:example/categories.dart';
 import 'package:example/class.dart';
 import 'package:flutter/material.dart';
 import 'package:tomlog/tomlog.dart';
 
 void main() {
-  log('1');
-  TomLog.init(printOnlyCritical: false, printTimeStamp: false);
-  log('2');
+  TomLog.init(
+    printOnlyCritical: false,
+    printTimeStamp: false,
+    printClassName: false,
+    printFilename: true,
+    printLogLevel: true,
+  );
   TomLog().w("Aplicativo iniciado");
-  log('3');
-  TomLog().w("Aplicativo iniciado2", category: TomLogCategories.api);
-
-  // inspect(TomLog().history);
+  TomLog().w("API Inicializada", category: TomLogCategories.api);
 
   TomLog().printHistory();
 }

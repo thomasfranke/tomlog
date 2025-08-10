@@ -3,7 +3,7 @@ String getCallerClass() {
     '\n',
   );
   if (stackTraceLines.length > 2) {
-    final String traceLine = stackTraceLines[3];
+    final String traceLine = stackTraceLines[4];
     final RegExp regex = RegExp(r'#\d+\s+(.+) \(');
     final RegExpMatch? match = regex.firstMatch(traceLine);
     if (match != null) {

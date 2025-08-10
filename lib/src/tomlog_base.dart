@@ -4,6 +4,8 @@ import 'package:tomlog/src/core/log_builder.dart';
 import 'package:tomlog/src/models/log_display_type.dart';
 import 'package:tomlog/tomlog.dart';
 
+typedef LogHandler = Future<void> Function(TomLogEntry entry);
+
 /// Customizable logger singleton, with support for init and filters.
 class TomLog {
   /// Singleton instance
@@ -13,22 +15,22 @@ class TomLog {
 
   static final bool _initialized = false;
 
-  late bool printOnlyCritical;
+  late bool _printOnlyCritical;
 
-  late bool printTimeStamp;
+  late bool _printTimeStamp;
 
-  late bool printLogLevel;
+  late bool _printLogLevel;
 
-  late bool printFilename;
+  late bool _printFilename;
 
-  late bool printClassName;
+  late bool _printClassName;
 
-  late String timeStampFormat;
+  late String _timeStampFormat;
 
-  late TomLogPrintType printType;
+  late TomLogPrintType _printType;
 
   final List<TomLogEntry> history = <TomLogEntry>[];
-
+  final List<LogHandler> _handlers = [];
   static void init({
     bool printOnlyCritical = false,
     bool printTimeStamp = true,
@@ -37,62 +39,70 @@ class TomLog {
     bool printClassName = true,
     TomLogPrintType printType = TomLogPrintType.slim,
     String timeStampFormat = 'yyyy-MM-dd HH:mm:ss',
+    List<LogHandler>? logHandlers,
   }) {
     if (_initialized) {
       throw StateError('TomLog has already been initialized.');
     }
 
-    _instance.printOnlyCritical = printOnlyCritical;
-    _instance.printTimeStamp = printTimeStamp;
-    _instance.printFilename = printFilename;
-    _instance.printFilename = printFilename;
-    _instance.printLogLevel = printLogLevel;
-    _instance.printClassName = printClassName;
-    _instance.timeStampFormat = timeStampFormat;
-    _instance.printType = printType;
+    _instance._printOnlyCritical = printOnlyCritical;
+    _instance._printTimeStamp = printTimeStamp;
+    _instance._printFilename = printFilename;
+    _instance._printFilename = printFilename;
+    _instance._printLogLevel = printLogLevel;
+    _instance._printClassName = printClassName;
+    _instance._timeStampFormat = timeStampFormat;
+    _instance._printType = printType;
+    if (logHandlers != null) {
+      _instance._handlers.addAll(logHandlers);
+    }
   }
 
   /// Logs a debug message.
   void d(final String message, {final TomLogCategory? category}) {
-    TomLogBuilder().logBuilder(
-      _instance,
-      message,
-      category: category,
-      logLevel: TomLogLevel.debug,
-    );
+    _logBuilder(message, category: category, logLevel: TomLogLevel.debug);
   }
 
   /// Logs an info message.
   void i(final String message, {final TomLogCategory? category}) {
-    TomLogBuilder().logBuilder(
-      this,
-      message,
-      category: category,
-      logLevel: TomLogLevel.info,
-    );
+    _logBuilder(message, category: category, logLevel: TomLogLevel.info);
   }
 
   /// Logs a warning message.
   void w(final String message, {final TomLogCategory? category}) {
-    TomLogBuilder().logBuilder(
-      this,
-      message,
-      category: category,
-      logLevel: TomLogLevel.warning,
-    );
+    _logBuilder(message, category: category, logLevel: TomLogLevel.warning);
   }
 
   /// Logs an error message.
-  void e(final String message, {final TomLogCategory? category}) {
-    TomLogBuilder().logBuilder(
-      this,
+  void e(final String message, {final TomLogCategory? category}) async {
+    TomLogEntry entry = _logBuilder(
       message,
       category: category,
       logLevel: TomLogLevel.error,
     );
+
+    await _notifyHandlers(entry: entry);
   }
 
-  void printHistory({
+  TomLogEntry _logBuilder(
+    String message, {
+    required TomLogLevel logLevel,
+    TomLogCategory? category,
+  }) => TomLogBuilder().logBuilder(
+    this,
+    message,
+    printOnlyCritical: _printOnlyCritical,
+    printTimeStamp: _printTimeStamp,
+    printLogLevel: _printLogLevel,
+    printFilename: _printFilename,
+    printClassName: _printClassName,
+    timeStampFormat: _timeStampFormat,
+    printType: _printType,
+    category: category,
+    logLevel: logLevel,
+  );
+
+  String getHistoryString({
     TomLogCategory? filterCategory,
     TomLogLevel? filterLevel,
   }) {
@@ -111,8 +121,28 @@ class TomLog {
       buffer.writeln(entry.toString());
     }
 
-    final output = buffer.toString().trim();
+    return buffer.toString().trim();
+  }
+
+  void printHistory({
+    TomLogCategory? filterCategory,
+    TomLogLevel? filterLevel,
+  }) {
+    final output = getHistoryString(
+      filterCategory: filterCategory,
+      filterLevel: filterLevel,
+    );
 
     log(output);
+  }
+
+  Future<void> _notifyHandlers({required TomLogEntry entry}) async {
+    for (final handler in _handlers) {
+      try {
+        await handler(entry);
+      } catch (e) {
+        log('Log handler error: $e');
+      }
+    }
   }
 }

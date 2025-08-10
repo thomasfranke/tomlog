@@ -1,11 +1,16 @@
-String getCallerFilename() {
+String getCallerFilename({int frameIndex = 3}) {
   final lines = StackTrace.current.toString().split('\n');
-  if (lines.length > 3) {
-    final line = lines[3];
+
+  if (lines.length > frameIndex) {
+    final line = lines[frameIndex];
     final regex = RegExp(r'package:[^/]+/([^:]+):(\d+):(\d+)');
     final match = regex.firstMatch(line);
+
     if (match != null) {
-      return '${match.group(1)}:${match.group(2)}';
+      final fullPath = match.group(1)!;
+      final fileName = fullPath.split('/').last;
+      final lineNumber = match.group(2);
+      return '$fileName:$lineNumber';
     }
   }
   return 'unknown';

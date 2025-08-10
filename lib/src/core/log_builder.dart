@@ -2,36 +2,40 @@ import 'dart:developer';
 
 import 'package:intl/intl.dart';
 import 'package:tomlog/src/helpers/caller_class.dart';
+import 'package:tomlog/src/models/log_display_type.dart';
 import 'package:tomlog/tomlog.dart';
 
 class TomLogBuilder {
   /// Loga uma mensagem com nível e rastreia o chamador
-  void logBuilder(
+  TomLogEntry logBuilder(
     TomLog logger,
     String message, {
+    required bool printOnlyCritical,
+    required bool printTimeStamp,
+    required bool printLogLevel,
+    required bool printFilename,
+    required bool printClassName,
+    required String timeStampFormat,
+    required TomLogPrintType printType,
     required TomLogLevel logLevel,
     TomLogCategory? category,
   }) {
-    if (logger.printOnlyCritical && logLevel != TomLogLevel.error) return;
-
     final StringBuffer buffer = StringBuffer();
 
-    final String timeStamp = DateFormat(
-      logger.timeStampFormat,
-    ).format(DateTime.now());
+    final String timeStamp = DateFormat(timeStampFormat).format(DateTime.now());
 
-    if (logger.printTimeStamp) buffer.write("[$timeStamp]");
+    if (printTimeStamp) buffer.write("[$timeStamp]");
 
     final level = logLevel.name.toUpperCase();
-    if (logger.printLogLevel) buffer.write("[$level]");
+    if (printLogLevel) buffer.write("[$level]");
 
     if (category != null) buffer.write("[${category.name}]");
 
     final file = getCallerFilename();
-    if (logger.printFilename) buffer.write("[$file]");
+    if (printFilename) buffer.write("[$file]");
 
     final className = getCallerClass();
-    if (logger.printClassName) buffer.write("[$className]");
+    if (printClassName) buffer.write("[$className]");
 
     buffer.write(" $message");
 
@@ -54,7 +58,10 @@ class TomLogBuilder {
 
     String colorCode = category?.color.ansi ?? "";
 
-    // log(buffer.toString());
+    if (printOnlyCritical && logLevel != TomLogLevel.error) return entry;
+
     log("$colorCode${buffer.toString()}");
+
+    return entry;
   }
 }
